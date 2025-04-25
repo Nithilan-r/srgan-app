@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRGAN Image Enhancer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4b6cb7;
+            --primary-gradient: linear-gradient(90deg, #4b6cb7 0%, #182848 100%);
+            --secondary-color: #38ef7d;
+            --secondary-gradient: linear-gradient(90deg, #11998e 0%, #38ef7d 100%);
+            --dark-color: #182848;
+            --light-color: #f8f9fa;
+            --text-color: #333;
+            --card-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+            --border-radius: 12px;
+            --spacing: 1rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline-block;
+        }
+
+        header p {
+            color: #666;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .control-panel {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+        }
+
+        .control-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .control-section h3 {
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-color);
+            font-size: 1.2rem;
+        }
+
+        .file-upload {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #ccc;
+            border-radius: var(--border-radius);
+            padding: 2rem 1rem;
+            transition: var(--transition);
+            cursor: pointer;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .file-upload:hover {
+            border-color: var(--primary-color);
+        }
+
+        .file-upload i {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .file-upload p {
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-upload input {
+            display: none;
+        }
+
+        .test-images {
+            margin-top: 1.5rem;
+        }
+
+        .test-images select {
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+            margin-top: 0.5rem;
+            cursor: pointer;
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary-gradient);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        button i {
+            margin-right: 0.5rem;
+        }
+
+        .results-container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #eee;
+        }
+
+        .tab {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .tab.active {
+            background: white;
+            border-bottom: 3px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .tab:hover:not(.active) {
+            background: #f1f1f1;
+        }
+
+        .tab-content {
+            padding: 1.5rem;
+            min-height: 400px;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        .image-comparison {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1000px) {
+            .image-comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .image-card {
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: var(--transition);
+        }
+
+        .image-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .image-header {
+            padding: 1rem;
+            background: var(--light-color);
+            border-bottom: 1px solid #eee;
+        }
+
+        .image-header h3 {
+            font-size: 1rem;
+            color: var(--dark-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .image-body {
+            padding: 0.5rem;
+        }
+
+        .image-body img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 6px;
+        }
+
+        .download-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            background: var(--secondary-gradient);
+            color: white;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .status {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status.processing {
+            background-color: #fff3cd;
+            color: #856404;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .status i {
+            margin-right: 0.5rem;
+        }
+
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--primary-color);
+            animation: spin 1s linear infinite;
+            margin-right: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .placeholder {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: #888;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .placeholder i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #ccc;
+        }
+
+        #sidebar-toggle {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            color: white;
+            font-size: 1.5rem;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+
+        @media (max-width: 768px) {
+            #sidebar-toggle {
+                display: flex;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>✨ SRGAN Image Enhancer</h1>
+            
+        </header>
+
+        <div class="app-container">
+            <div class="control-panel" id="control-panel">
+                <div class="control-section">
+                    <h3><i class="fas fa-image"></i> Input Image</h3>
+                    <div class="file-upload" id="file-upload">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Drag & drop an image here</p>
+                        <p>or</p>
+                        <p><strong>Click to browse</strong></p>
+                        <input type="file" id="image-input" accept="image/*">
+                    </div>
+                    <div id="selected-file"></div>
+                    
+                    <div class="test-images">
+                        <h4>Or select a test image:</h4>
+                        <select id="test-images">
+                            <option value="">Select a test image...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button id="process-btn" disabled><i class="fas fa-magic"></i> Enhance Image</button>
+                
+                <div class="status" id="status"></div>
+            </div>
+
+            <div class="results-container">
+                <div class="tabs">
+                    <div class="tab active" data-tab="comparison">Side by Side Comparison</div>
+                    <div class="tab" data-tab="individual">Individual View</div>
+                </div>
+
+                <div class="tab-content">
+                    <div class="tab-pane active" id="comparison">
+                        <div class="placeholder" id="comparison-placeholder">
+                            <i class="fas fa-images"></i>
+                            <p>Upload an image and click "Enhance Image" to see results here</p>
+                        </div>
+                        <div class="image-comparison" id="image-comparison" style="display: none;">
+                            <!-- Results will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <div class="tab-pane" id="individual">
+                        <div class="placeholder" id="individual-placeholder">
+                            <i class="fas fa-image"></i>
+                            <p>Upload an image and click "Enhance Image" to see results here</p>
+                        </div>
+                        <div id="individual-images" style="display: none;">
+                            <!-- Results will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="sidebar-toggle">
+        <i class="fas fa-cog"></i>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const fileUpload = document.getElementById('file-upload');
+            const imageInput = document.getElementById('image-input');
+            const selectedFile = document.getElementById('selected-file');
+            const testImagesSelect = document.getElementById('test-images');
+            const processBtn = document.getElementById('process-btn');
+            const statusElement = document.getElementById('status');
+            const imageComparison = document.getElementById('image-comparison');
+            const comparisonPlaceholder = document.getElementById('comparison-placeholder');
+            const individualImages = document.getElementById('individual-images');
+            const individualPlaceholder = document.getElementById('individual-placeholder');
+            const tabs = document.querySelectorAll('.tab');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const controlPanel = document.getElementById('control-panel');
+
+            // Variables
+            let selectedImage = null;
+            let isTestImage = false;
+            let selectedTestImage = '';
+            
+            // Load test images
+            async function loadTestImages() {
+                try {
+                    const response = await fetch('/test-images');
+                    if (response.ok) {
+                        const testImages = await response.json();
+                        testImages.forEach(image => {
+                            const option = document.createElement('option');
+                            option.value = image;
+                            option.textContent = image;
+                            testImagesSelect.appendChild(option);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error loading test images:', error);
+                }
+            }
+            
+            loadTestImages();
+            
+            // File upload by click
+            fileUpload.addEventListener('click', function() {
+                imageInput.click();
+            });
+            
+            // File upload change
+            imageInput.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    if (file.type.match('image.*')) {
+                        selectedImage = file;
+                        isTestImage = false;
+                        selectedTestImage = '';
+                        testImagesSelect.value = '';
+                        selectedFile.innerHTML = `<p>Selected: <strong>${file.name}</strong></p>`;
+                        processBtn.disabled = false;
+                    }
+                }
+            });
+            
+            // Drag and drop
+            fileUpload.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                fileUpload.style.borderColor = '#4b6cb7';
+                fileUpload.style.backgroundColor = '#f0f4ff';
+            });
+            
+            fileUpload.addEventListener('dragleave', function() {
+                fileUpload.style.borderColor = '#ccc';
+                fileUpload.style.backgroundColor = 'transparent';
+            });
+            
+            fileUpload.addEventListener('drop', function(e) {
+                e.preventDefault();
+                fileUpload.style.borderColor = '#ccc';
+                fileUpload.style.backgroundColor = 'transparent';
+                
+                if (e.dataTransfer.files.length > 0) {
+                    const file = e.dataTransfer.files[0];
+                    if (file.type.match('image.*')) {
+                        selectedImage = file;
+                        isTestImage = false;
+                        selectedTestImage = '';
+                        testImagesSelect.value = '';
+                        selectedFile.innerHTML = `<p>Selected: <strong>${file.name}</strong></p>`;
+                        processBtn.disabled = false;
+                    }
+                }
+            });
+            
+            // Test image selection
+            testImagesSelect.addEventListener('change', function() {
+                if (this.value) {
+                    isTestImage = true;
+                    selectedTestImage = this.value;
+                    selectedImage = null;
+                    selectedFile.innerHTML = '';
+                    processBtn.disabled = false;
+                } else {
+                    isTestImage = false;
+                    selectedTestImage = '';
+                    processBtn.disabled = true;
+                }
+            });
+            
+            // Process image button
+            processBtn.addEventListener('click', async function() {
+                if (!isTestImage && !selectedImage) {
+                    return;
+                }
+                
+                // Set processing status
+                statusElement.className = 'status processing';
+                statusElement.innerHTML = '<div class="loading-spinner"></div> Processing image...';
+                statusElement.style.display = 'flex';
+                processBtn.disabled = true;
+                
+                try {
+                    let response;
+                    
+                    if (isTestImage) {
+                        // Process test image
+                        response = await fetch(`/test-image/${selectedTestImage}`);
+                    } else {
+                        // Process uploaded image
+                        const formData = new FormData();
+                        formData.append('file', selectedImage);
+                        
+                        response = await fetch('/enhance', {
+                            method: 'POST',
+                            body: formData
+                        });
+                    }
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        displayResults(result.data);
+                        
+                        statusElement.className = 'status success';
+                        statusElement.innerHTML = '<i class="fas fa-check-circle"></i> Image enhanced successfully!';
+                    } else {
+                        const error = await response.json();
+                        throw new Error(error.detail || 'Failed to process image');
+                    }
+                } catch (error) {
+                    statusElement.className = 'status error';
+                    statusElement.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${error.message}`;
+                } finally {
+                    processBtn.disabled = false;
+                }
+            });
+            
+            // Display results
+            function displayResults(data) {
+                // Hide placeholders
+                comparisonPlaceholder.style.display = 'none';
+                individualPlaceholder.style.display = 'none';
+                
+                // Update comparison view
+                imageComparison.innerHTML = `
+                    <div class="image-card">
+                        <div class="image-header">
+                            <h3>
+                                <span>Low Resolution</span>
+                                <a class="download-btn" href="${data.lowres.base64}" download="lowres.jpg">
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                            </h3>
+                        </div>
+                        <div class="image-body">
+                            <img src="${data.lowres.base64}" alt="Low resolution">
+                        </div>
+                    </div>
+                    
+                    <div class="image-card">
+                        <div class="image-header">
+                            <h3>
+                                <span>Bicubic Upscaling</span>
+                                <a class="download-btn" href="${data.bicubic.base64}" download="bicubic.jpg">
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                            </h3>
+                        </div>
+                        <div class="image-body">
+                            <img src="${data.bicubic.base64}" alt="Bicubic upscale">
+                        </div>
+                    </div>
+                    
+                    <div class="image-card">
+                        <div class="image-header">
+                            <h3>
+                                <span>SRGAN Enhanced</span>
+                                <a class="download-btn" href="${data.enhanced.base64}" download="enhanced.jpg">
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                            </h3>
+                        </div>
+                        <div class="image-body">
+                            <img src="${data.enhanced.base64}" alt="SRGAN enhanced">
+                        </div>
+                    </div>
+                `;
+                imageComparison.style.display = 'grid';
+                
+                // Update individual view
+                individualImages.innerHTML = `
+                    <div style="margin-bottom: 2rem;">
+                        <h3 style="margin-bottom: 1rem;">Low Resolution Input</h3>
+                        <img src="${data.lowres.base64}" alt="Low resolution" style="max-width: 100%; border-radius: 8px; box-shadow: var(--card-shadow);">
+                    </div>
+                    
+                    <div style="margin-bottom: 2rem;">
+                        <h3 style="margin-bottom: 1rem;">Bicubic Upscaling</h3>
+                        <img src="${data.bicubic.base64}" alt="Bicubic upscale" style="max-width: 100%; border-radius: 8px; box-shadow: var(--card-shadow);">
+                    </div>
+                    
+                    <div>
+                        <h3 style="margin-bottom: 1rem;">SRGAN Enhanced Result</h3>
+                        <img src="${data.enhanced.base64}" alt="SRGAN enhanced" style="max-width: 100%; border-radius: 8px; box-shadow: var(--card-shadow);">
+                        <div style="text-align: center; margin-top: 1rem;">
+                            <a class="download-btn" href="${data.enhanced.base64}" download="enhanced.jpg" style="display: inline-block;">
+                                <i class="fas fa-download"></i> Download Enhanced Image
+                            </a>
+                        </div>
+                    </div>
+                `;
+                individualImages.style.display = 'block';
+            }
+            
+            // Tabs functionality
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs
+                    tabs.forEach(t => t.classList.remove('active'));
+                    
+                    // Add active class to current tab
+                    this.classList.add('active');
+                    
+                    // Show corresponding tab pane
+                    const targetId = this.getAttribute('data-tab');
+                    tabPanes.forEach(pane => {
+                        pane.classList.remove('active');
+                        if (pane.id === targetId) {
+                            pane.classList.add('active');
+                        }
+                    });
+                });
+            });
+            
+            // Sidebar toggle for mobile
+            sidebarToggle.addEventListener('click', function() {
+                controlPanel.style.display = controlPanel.style.display === 'none' ? 'block' : 'none';
+            });
+        });
+    </script>
+</body>
+</html> 
