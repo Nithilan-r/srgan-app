@@ -146,25 +146,44 @@ async def enhance_image(file: UploadFile = File(...)):
     try:
         # Read and process image
         contents = await file.read()
-        original_image = Image.open(io.BytesIO(contents)).convert("RGB")
+        if not contents:
+            raise HTTPException(status_code=400, detail="Empty file uploaded")
+            
+        try:
+            original_image = Image.open(io.BytesIO(contents)).convert("RGB")
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Invalid image file: {str(e)}")
+        
+        # Validate image size
+        if original_image.size[0] < 32 or original_image.size[1] < 32:
+            raise HTTPException(status_code=400, detail="Image is too small. Minimum size is 32x32 pixels")
         
         # Process image with model
-        lr_image, bicubic_image, sr_image = process_image(original_image)
+        try:
+            lr_image, bicubic_image, sr_image = process_image(original_image)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error processing image with model: {str(e)}")
         
         # Save images to disk
-        timestamp = str(int(os.path.getmtime("static")))
-        lr_path = f"static/results/lr_{timestamp}.jpg"
-        bicubic_path = f"static/results/bicubic_{timestamp}.jpg"
-        sr_path = f"static/results/sr_{timestamp}.jpg"
-        
-        lr_image.save(lr_path)
-        bicubic_image.save(bicubic_path)
-        sr_image.save(sr_path)
+        try:
+            timestamp = str(int(os.path.getmtime("static")))
+            lr_path = f"static/results/lr_{timestamp}.jpg"
+            bicubic_path = f"static/results/bicubic_{timestamp}.jpg"
+            sr_path = f"static/results/sr_{timestamp}.jpg"
+            
+            lr_image.save(lr_path)
+            bicubic_image.save(bicubic_path)
+            sr_image.save(sr_path)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error saving images: {str(e)}")
         
         # Convert images to base64 for response
-        lr_b64 = image_to_base64(lr_image)
-        bicubic_b64 = image_to_base64(bicubic_image)
-        sr_b64 = image_to_base64(sr_image)
+        try:
+            lr_b64 = image_to_base64(lr_image)
+            bicubic_b64 = image_to_base64(bicubic_image)
+            sr_b64 = image_to_base64(sr_image)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error converting images to base64: {str(e)}")
         
         return {
             "success": True,
@@ -184,8 +203,11 @@ async def enhance_image(file: UploadFile = File(...)):
                 }
             }
         }
+    except HTTPException as e:
+        raise e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
+        print(f"Unexpected error: {str(e)}")  # Log the error
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 # API endpoint for test images
 @app.get("/test-images", response_model=List[str])
