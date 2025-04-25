@@ -152,7 +152,7 @@ async def enhance_image(file: UploadFile = File(...)):
         lr_image, bicubic_image, sr_image = process_image(original_image)
         
         # Save images to disk
-        timestamp = str(int(os.getmtime("static")))
+        timestamp = str(int(os.path.getmtime("static")))
         lr_path = f"static/results/lr_{timestamp}.jpg"
         bicubic_path = f"static/results/bicubic_{timestamp}.jpg"
         sr_path = f"static/results/sr_{timestamp}.jpg"
