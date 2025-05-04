@@ -369,7 +369,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>✨ SRGAN Image Enhancer</h1>
+            <h1>SRGAN Image Enhancer</h1>
             
         </header>
 
@@ -401,22 +401,11 @@
 
             <div class="results-container">
                 <div class="tabs">
-                    <div class="tab active" data-tab="comparison">Side by Side Comparison</div>
-                    <div class="tab" data-tab="individual">Individual View</div>
+                    <div class="tab active" data-tab="individual">Individual View</div>
                 </div>
 
                 <div class="tab-content">
-                    <div class="tab-pane active" id="comparison">
-                        <div class="placeholder" id="comparison-placeholder">
-                            <i class="fas fa-images"></i>
-                            <p>Upload an image and click "Enhance Image" to see results here</p>
-                        </div>
-                        <div class="image-comparison" id="image-comparison" style="display: none;">
-                            <!-- Results will be loaded here -->
-                        </div>
-                    </div>
-                    
-                    <div class="tab-pane" id="individual">
+                    <div class="tab-pane active" id="individual">
                         <div class="placeholder" id="individual-placeholder">
                             <i class="fas fa-image"></i>
                             <p>Upload an image and click "Enhance Image" to see results here</p>
@@ -443,8 +432,6 @@
             const testImagesSelect = document.getElementById('test-images');
             const processBtn = document.getElementById('process-btn');
             const statusElement = document.getElementById('status');
-            const imageComparison = document.getElementById('image-comparison');
-            const comparisonPlaceholder = document.getElementById('comparison-placeholder');
             const individualImages = document.getElementById('individual-images');
             const individualPlaceholder = document.getElementById('individual-placeholder');
             const tabs = document.querySelectorAll('.tab');
@@ -574,7 +561,6 @@
                     if (response.ok) {
                         const result = await response.json();
                         displayResults(result.data);
-                        
                         statusElement.className = 'status success';
                         statusElement.innerHTML = '<i class="fas fa-check-circle"></i> Image enhanced successfully!';
                     } else {
@@ -591,71 +577,24 @@
             
             // Display results
             function displayResults(data) {
-                // Hide placeholders
-                comparisonPlaceholder.style.display = 'none';
+                // Hide placeholder
                 individualPlaceholder.style.display = 'none';
-                
-                // Update comparison view
-                imageComparison.innerHTML = `
-                    <div class="image-card">
-                        <div class="image-header">
-                            <h3>
-                                <span>Low Resolution</span>
-                                <a class="download-btn" href="${data.lowres.base64}" download="lowres.jpg">
-                                    <i class="fas fa-download"></i> Download
-                                </a>
-                            </h3>
-                        </div>
-                        <div class="image-body">
-                            <img src="${data.lowres.base64}" alt="Low resolution">
-                        </div>
-                    </div>
-                    
-                    <div class="image-card">
-                        <div class="image-header">
-                            <h3>
-                                <span>Bicubic Upscaling</span>
-                                <a class="download-btn" href="${data.bicubic.base64}" download="bicubic.jpg">
-                                    <i class="fas fa-download"></i> Download
-                                </a>
-                            </h3>
-                        </div>
-                        <div class="image-body">
-                            <img src="${data.bicubic.base64}" alt="Bicubic upscale">
-                        </div>
-                    </div>
-                    
-                    <div class="image-card">
-                        <div class="image-header">
-                            <h3>
-                                <span>SRGAN Enhanced</span>
-                                <a class="download-btn" href="${data.enhanced.base64}" download="enhanced.jpg">
-                                    <i class="fas fa-download"></i> Download
-                                </a>
-                            </h3>
-                        </div>
-                        <div class="image-body">
-                            <img src="${data.enhanced.base64}" alt="SRGAN enhanced">
-                        </div>
-                    </div>
-                `;
-                imageComparison.style.display = 'grid';
                 
                 // Update individual view
                 individualImages.innerHTML = `
                     <div style="margin-bottom: 2rem;">
                         <h3 style="margin-bottom: 1rem;">Low Resolution Input</h3>
-                        <img src="${data.lowres.base64}" alt="Low resolution" style="max-width: 100%; border-radius: 8px; box-shadow: var(--card-shadow);">
+                        <img src="${data.lowres.base64}" alt="Low resolution" style="max-width: 100px; border-radius: 8px; box-shadow: var(--card-shadow);">
                     </div>
                     
                     <div style="margin-bottom: 2rem;">
                         <h3 style="margin-bottom: 1rem;">Bicubic Upscaling</h3>
-                        <img src="${data.bicubic.base64}" alt="Bicubic upscale" style="max-width: 100%; border-radius: 8px; box-shadow: var(--card-shadow);">
+                        <img src="${data.bicubic.base64}" alt="Bicubic upscale" style="max-width: 200px; height: auto; border-radius: 8px; box-shadow: var(--card-shadow);">
                     </div>
                     
                     <div>
                         <h3 style="margin-bottom: 1rem;">SRGAN Enhanced Result</h3>
-                        <img src="${data.enhanced.base64}" alt="SRGAN enhanced" style="max-width: 100%; border-radius: 8px; box-shadow: var(--card-shadow);">
+                        <img src="${data.enhanced.base64}" alt="SRGAN enhanced" style="max-width: 200px; height: auto; border-radius: 8px; box-shadow: var(--card-shadow);">
                         <div style="text-align: center; margin-top: 1rem;">
                             <a class="download-btn" href="${data.enhanced.base64}" download="enhanced.jpg" style="display: inline-block;">
                                 <i class="fas fa-download"></i> Download Enhanced Image
@@ -666,15 +605,13 @@
                 individualImages.style.display = 'block';
             }
             
-            // Tabs functionality
+            // Tabs functionality (only one tab now, but keep for future extensibility)
             tabs.forEach(tab => {
                 tab.addEventListener('click', function() {
                     // Remove active class from all tabs
                     tabs.forEach(t => t.classList.remove('active'));
-                    
                     // Add active class to current tab
                     this.classList.add('active');
-                    
                     // Show corresponding tab pane
                     const targetId = this.getAttribute('data-tab');
                     tabPanes.forEach(pane => {
@@ -685,7 +622,6 @@
                     });
                 });
             });
-            
             // Sidebar toggle for mobile
             sidebarToggle.addEventListener('click', function() {
                 controlPanel.style.display = controlPanel.style.display === 'none' ? 'block' : 'none';
